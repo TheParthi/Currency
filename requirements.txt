@@ -14,7 +14,7 @@ requests
 scipy
 seaborn
 thop
-torch
-torchvision
+torch==2.0.1+cpu
+torchvision==0.15.2+cpu
 tqdm
 Werkzeug
