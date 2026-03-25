@@ -1,37 +1,33 @@
-# from gtts import gTTS 
-
-convert_word_to_hindi = {
-    "and" : "aur ",
-    "one" : "ek",
-    "two" : "do",
-    "three": "teen",
-    "four": "chaar", 
-    "five" : "paanch", 
-    "six" : "chhah",
-    "seven" : "saat",
-    "eight": "aath", 
-    "nine" : "nau",
-    "10Rupees": "das rupaye ",
-    "20Rupees": "bees rupaye ",
-    "50Rupees": "pachaas rupaye ",
-    "100Rupees": "ek sau rupaye ",
-    "200Rupees": "do sau rupaye ",
-    "500Rupees": "paanch sau rupaye ",
-    "Notes": "ke not ",
-    "Note" : "ka not ",
+convert_word_to_tamil = {
+    "and": "matrum",
+    "one": "oru",
+    "two": "irandu",
+    "three": "moondru",
+    "four": "naangu",
+    "five": "iynthu",
+    "six": "aaru",
+    "seven": "yealu",
+    "eight": "ettu",
+    "nine": "onbathu",
+    "10Rupees": "pathu roobai",
+    "20Rupees": "irubathu roobai",
+    "50Rupees": "aimbathu roobai",
+    "100Rupees": "nooru roobai",
+    "200Rupees": "irunooru roobai",
+    "500Rupees": "ainooru roobai",
+    "Notes": "thaalgal",
+    "Note": "thaal",
 }
 
-def convert_lang(text):
-    res = ""
-    if(text == "Reload the page and try with another better image"):
-        res = "Page ko punah lod karo aur ek aur behatar chhavi ke saath prayaas karo"
+def convert_to_tamil(text):
+    if text == "Reload the page and try with another better image" or text == "" or text.lower().strip() == "image contains":
+        return "Sariyana padathai kaatavum"
     else:
         wordArr = list(text.split(' '))
-        res = "is chhavi mein "
+        res = "ithil "
         for word in wordArr:
-            if(word in convert_word_to_hindi):
-                res += convert_word_to_hindi[word]
-
-        res += "hai"
+            if word in convert_word_to_tamil:
+                res += convert_word_to_tamil[word] + " "
+        res += "ullathu"
         
     return res

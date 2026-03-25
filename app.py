@@ -8,7 +8,7 @@ import base64
 # import time
 
 from yolo_detection import run_model
-from language_conversion import convert_lang
+from language_conversion import convert_to_tamil
 
 app = Flask(__name__)
 
@@ -45,7 +45,7 @@ def mask_image():
         text = "Reload the page and try with another better image"
     
     englishtext = text
-    hinditext = convert_lang(text)
+    tamiltext = convert_to_tamil(text)
     
     # below encodes the detected image as it sent to server back
     """
@@ -61,7 +61,7 @@ def mask_image():
     img_base64.save(bufferedBytes, format="JPEG")
     img_base64 = base64.b64encode(bufferedBytes.getvalue())
     # return jsonify({'status':str(img_base64)})
-    return jsonify({'status':str(img_base64),'englishmessage':englishtext, 'hindimessage':hinditext})
+    return jsonify({'status':str(img_base64),'englishmessage':englishtext, 'tamilmessage':tamiltext})
 
 ################################## THE MAIN PART IS DONE ABOVE #########################################################
 
