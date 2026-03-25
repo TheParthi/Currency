@@ -3,21 +3,40 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Currency Scanner Accessibility Mode</title>
-  <link rel="stylesheet" type="text/css" href="/static/index.css">
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-  <script type="text/javascript" src="/static/index.js"></script>
+  <title>Currency Scanner Manual Mode</title>
+  <style>
+    body { background: #111; color: white; margin: 0; font-family: sans-serif; text-align: center; }
+    h1 { font-size: 22px; padding: 10px; margin: 0; background: #222; }
+    #camera-container { width: 100%; max-width: 500px; margin: 20px auto; position: relative; border: 2px solid #444; }
+    video { width: 100%; height: auto; display: block; }
+    img#snapshot { width: 100%; height: auto; display: none; }
+    .btn { padding: 15px 30px; font-size: 22px; border: none; border-radius: 8px; cursor: pointer; color: black; margin: 10px; font-weight: bold; width: 80%; max-width: 400px; display: block; margin-left: auto; margin-right: auto;}
+    #start-btn { background: #5bc0de; }
+    #capture-btn { background: #f0ad4e; display: none; }
+    #detect-btn { background: #5cb85c; display: none; }
+    #retake-btn { background: #d9534f; display: none; margin-top: 20px;}
+    #result-text { font-size: 26px; color: #5bc0de; min-height: 40px; margin: 20px; font-weight: bold;}
+    canvas { display: none; }
+  </style>
 </head>
 <body>
-  <!-- Full screen button for starting the scanning logic. Necessary for Audio context initialization -->
-  <button id="start-button" class="start-button" aria-label="Tap anywhere on the screen to start currency scanning">
-    <span>Tap anywhere to start<br><br>தொடங்க திரையில் எங்கும் தொடவும்</span>
-  </button>
-  
-  <div id="scanner-ui" style="display:none;">
-    <video id="camera-feed" autoplay playsinline aria-hidden="true"></video>
-    <canvas id="camera-canvas" style="display:none;"></canvas>
-    <div class="status-overlay" id="status-text" aria-live="polite">Starting Camera...</div>
+  <h1>Indian Currency Detector</h1>
+  <div id="camera-container">
+    <video id="camera-feed" autoplay playsinline></video>
+    <img id="snapshot">
+    <canvas id="camera-canvas"></canvas>
   </div>
+  
+  <div id="result-text">Ready</div>
+
+  <div id="controls">
+    <button id="start-btn" class="btn">Start Camera</button>
+    <button id="capture-btn" class="btn">Capture Image</button>
+    <button id="detect-btn" class="btn">Detect Currency</button>
+    <button id="retake-btn" class="btn">Capture Another</button>
+  </div>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script type="text/javascript" src="/static/index.js"></script>
 </body>
 </html>

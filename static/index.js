@@ -1,67 +1,90 @@
-let isScanning = false;
-let scanningInterval;
-let lastSpokenText = "";
+let video, canvas, ctx, snapshotImg;
+let startBtn, captureBtn, detectBtn, retakeBtn, resultText;
 
 window.onload = () => {
-  const startButton = document.getElementById('start-button');
-  const scannerUI = document.getElementById('scanner-ui');
-  const video = document.getElementById('camera-feed');
-  const canvas = document.getElementById('camera-canvas');
-  const statusText = document.getElementById('status-text');
+  video = document.getElementById('camera-feed');
+  canvas = document.getElementById('camera-canvas');
+  ctx = canvas.getContext('2d');
+  snapshotImg = document.getElementById('snapshot');
+  
+  startBtn = document.getElementById('start-btn');
+  captureBtn = document.getElementById('capture-btn');
+  detectBtn = document.getElementById('detect-btn');
+  retakeBtn = document.getElementById('retake-btn');
+  resultText = document.getElementById('result-text');
 
-  // Pre-fetch voices to prevent delay
-  speechSynthesis.getVoices();
+  // Pre-load audio engine
+  window.speechSynthesis.getVoices();
 
-  startButton.addEventListener('click', async () => {
-    // Hide start button and show camera interface
-    startButton.style.display = 'none';
-    scannerUI.style.display = 'block';
-
-    // Must trigger speech strictly inside the user gesture to unlock AudioContext
-    let dummyUtterance = new SpeechSynthesisUtterance("");
-    dummyUtterance.volume = 0; // mute
-    window.speechSynthesis.speak(dummyUtterance);
-
-    // Give instructions in Voice
-    speakOut("Camera activated. Please scan currency.", "en-US");
-    speakOut("கேமரா தொடங்கப்பட்டது. தயவுசெய்து பணத்தை காண்பிக்கவும்.", "ta-IN");
-
+  startBtn.addEventListener('click', async () => {
     try {
+      // Force audio access context unlock
+      let dummyUtterance = new SpeechSynthesisUtterance("Starting camera.");
+      dummyUtterance.volume = 0;
+      window.speechSynthesis.speak(dummyUtterance);
+      
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: "environment" // Always try to use the back camera
-        }
+        video: { facingMode: "environment" }
       });
       video.srcObject = stream;
+      video.style.display = 'block';
+      snapshotImg.style.display = 'none';
       
-      video.onloadedmetadata = () => {
-        video.play();
-        isScanning = true;
-        // Start capture loop every 5 seconds (to avoid freezing the free server)
-        scanningInterval = setInterval(captureAndSend, 5000);
-      };
+      startBtn.style.display = 'none';
+      captureBtn.style.display = 'block';
+      resultText.innerText = "Camera Active";
+      
+      speakOut("Camera Active. Point at currency and press Capture.", "en-US");
     } catch (err) {
-      statusText.innerText = "Camera Access Denied";
-      speakOut("Error accessing camera. Please check permissions.", "en-US");
+      resultText.innerText = "Camera Error";
+      console.error(err);
+      speakOut("Error, please check camera permissions.", "en-US");
     }
   });
 
-  function captureAndSend() {
-    if (!isScanning || !video.videoWidth) return;
+  captureBtn.addEventListener('click', () => {
+    if (!video.videoWidth) return;
     
-    // Set canvas dimensions exactly to video dimensions
+    // Set canvas dimensions exactly to video frame
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
-    const ctx = canvas.getContext('2d');
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     
-    // Obtain JPEG blob from canvas
+    // Convert to Image and place over video
+    const dataURL = canvas.toDataURL('image/jpeg', 0.8);
+    snapshotImg.src = dataURL;
+    
+    video.style.display = 'none';
+    snapshotImg.style.display = 'block';
+    
+    captureBtn.style.display = 'none';
+    detectBtn.style.display = 'block';
+    retakeBtn.style.display = 'block';
+    resultText.innerText = "Captured. Press Detect.";
+    
+    speakOut("Image captured. Please press Detect.", "en-US");
+  });
+
+  retakeBtn.addEventListener('click', () => {
+    video.style.display = 'block';
+    snapshotImg.style.display = 'none';
+    
+    detectBtn.style.display = 'none';
+    retakeBtn.style.display = 'none';
+    captureBtn.style.display = 'block';
+    resultText.innerText = "Camera Active";
+  });
+
+  detectBtn.addEventListener('click', () => {
+    detectBtn.style.display = 'none';
+    retakeBtn.style.display = 'none';
+    resultText.innerText = "Scanning on Server...";
+    speakOut("Detecting now...", "en-US");
+
     canvas.toBlob((blob) => {
       let formData = new FormData();
       formData.append('image', blob, 'capture.jpg');
       
-      statusText.innerText = "Scanning...";
-
       $.ajax({
         url: "/detectObject",
         type: "POST",
@@ -72,49 +95,41 @@ window.onload = () => {
         success: function(data) {
           const englishMsg = data['englishmessage'];
           const tamilMsg = data['tamilmessage'];
+          const returnedImg = data['status'];
           
-          if (englishMsg && 
-              englishMsg.toLowerCase().indexOf("try with another better image") === -1 && 
-              englishMsg.toLowerCase() !== "image contains") {
-              
-              const cleanMsg = englishMsg.replace(/Image contains/gi, '').trim();
-
-              // Avoid spamming the user by speaking the same result continuously
-              if (lastSpokenText !== englishMsg) {
-                 statusText.innerText = cleanMsg;
-                 
-                 // Speak Tamil first, then English
-                 speakOut(tamilMsg, "ta-IN");
-                 speakOut(cleanMsg, "en-US");
-                 
-                 lastSpokenText = englishMsg;
-                 
-                 // Clear internal memory of last spoken after 10 seconds 
-                 // just in case they hold the same note for a long time intentionally
-                 setTimeout(() => { 
-                   if(lastSpokenText === englishMsg) lastSpokenText = ""; 
-                 }, 10000);
-              }
-          } else {
-             statusText.innerText = "Scanning...";
+          if(returnedImg) {
+              snapshotImg.src = 'data:image/jpeg;base64,' + returnedImg;
           }
+          
+          if (englishMsg && englishMsg.trim() !== "Image contains" && englishMsg.indexOf("another better image") === -1) {
+              const cleanMsg = englishMsg.replace(/Image contains/gi, '').trim();
+              resultText.innerText = cleanMsg;
+              
+              speakOut(tamilMsg, "ta-IN");
+              speakOut(cleanMsg, "en-US");
+          } else {
+              resultText.innerText = "Nothing detected. Retake.";
+              speakOut("Nothing detected. Please retake the photo.", "en-US");
+          }
+          retakeBtn.style.display = 'block';
         },
         error: function(err) {
-          console.error("Transmission error", err);
+          resultText.innerText = "Server Error";
+          speakOut("Server connection error.", "en-US");
+          console.error("Upload error", err);
+          retakeBtn.style.display = 'block';
         }
       });
-    }, "image/jpeg", 0.6); // 0.6 quality keeps the upload payload small for snappy response
-  }
+    }, "image/jpeg", 0.7);
+  });
 
   function speakOut(text, languageCode) {
     if(!text) return;
-    
     let utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = languageCode;
     utterance.rate = 0.9;
     
     const voices = window.speechSynthesis.getVoices();
-    // Attempt to pick a high quality matching voice
     if(languageCode.startsWith('ta')) {
        const tamilVoice = voices.find(v => v.lang.includes('ta'));
        if(tamilVoice) utterance.voice = tamilVoice;
@@ -122,7 +137,6 @@ window.onload = () => {
        const engVoice = voices.find(v => v.lang === 'en-US' || v.lang === 'en-GB');
        if(engVoice) utterance.voice = engVoice;
     }
-    
     window.speechSynthesis.speak(utterance);
   }
 };
