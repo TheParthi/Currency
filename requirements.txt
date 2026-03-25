@@ -1,20 +1,9 @@
---extra-index-url https://download.pytorch.org/whl/cpu
-
 Flask
 gTTS
 gunicorn
-matplotlib
 numpy
 opencv-python-headless
 opencv-contrib-python-headless
-pandas
 Pillow
-PyYAML
 requests
-scipy
-seaborn
-thop
-torch==2.0.1+cpu
-torchvision==0.15.2+cpu
-tqdm
 Werkzeug

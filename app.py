@@ -7,7 +7,7 @@ import cv2
 import base64
 # import time
 
-from yolo_detection import run_model
+from fast_detection import run_model
 from language_conversion import convert_to_tamil
 
 app = Flask(__name__)
